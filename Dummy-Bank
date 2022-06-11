@@ -1,0 +1,63 @@
+// Creating sample Bank contract
+// Allows deposits, withdrawals and balance checks
+
+pragma solidity ^0.4.2;
+
+
+
+
+
+contract SampleBank {   
+   
+    mapping (address => uint) private balances;
+
+  
+
+    address public owner;
+
+    event LogDepositMade(address accountAddress, uint amount);
+
+
+    function SampleBank() {
+        // msg provides details about the message that's sent to the contract
+        // msg.sender is contract caller (address of contract creator)
+        owner = msg.sender;
+    }
+
+ 
+    function deposit() public returns (uint) {
+        balances[msg.sender] += msg.value;
+    
+
+        LogDepositMade(msg.sender, msg.value);  // fire event
+
+        return balances[msg.sender];
+    }
+
+
+    function withdraw(uint withdrawAmount) public returns (uint remainingBal) {
+        if (balances[msg.sender] >= withdrawAmount) {
+            // Note the way we deduct the balance right away, before sending - due to 
+            // the risk of a recursive call that allows the caller to request an amount greater
+            // than their balance
+            balances[msg.sender] -= withdrawAmount;
+
+            if (!msg.sender.send(withdrawAmount)) {
+                // increment back only on fail, as may be sending to contract that
+                // has overridden 'send' on the receipt end
+                balances[msg.sender] += withdrawAmount;
+            }
+        }
+
+        return balances[msg.sender];
+    }
+
+
+    function balance() constant returns (uint) {
+        return balances[msg.sender];
+    }
+
+    function () {
+        throw;  
+    }
+}
